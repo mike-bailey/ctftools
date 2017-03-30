@@ -1,0 +1,10 @@
+require 'digest/md5'
+require 'net/http'
+require 'httparty'
+require 'base64'
+require 'base32'
+#require 'upcase'
+# This gem is shit
+#require 'caesar'
+require 'set'
+require 'colorize'
