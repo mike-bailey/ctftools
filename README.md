@@ -16,3 +16,16 @@ File.sh will ultimately be used to provide useful output for more than just ASCI
 - JPEGs, PNGs, etc
 - Binaries
 
+## Install
+
+MacOS:
+
+_assumes brew_
+
+`brew install imagemagick`
+
+`brew install foremost`
+
+`gem install bundler`
+
+`bundle install`

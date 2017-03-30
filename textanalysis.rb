@@ -14,8 +14,11 @@ class Result
   # Get text of result
   
   def initialize(startertext, descrip)
+    # The text of the result
     @text = startertext
+    # How the result was cracked
     @descrip = descrip
+    # Categorize the result based on the description
     getRelevance()
   end
 
@@ -26,9 +29,11 @@ class Result
   		$relevancehigh.push(self)
   	elsif @text =~ /^[0-9a-zA-Z]*$/
       if @text == "" or @text == " "
+        # SHA or MD5 cracked should basically always be important in context
       elsif @descrip == "md5" or @descrip == "sha1" 
         @relevance = 2
         $relevancehigh.push(self)
+        # Caesar will always match the regex even if it's useless in context, so intentionally rank Caesar lower
       elsif @descrip != "caesar"
     		@relevance = 1
     		$relevancemedium.push(self)        
@@ -54,6 +59,7 @@ class Problem
   end
 
   def b64() 
+    # Catch if base64 fails
   	begin 
   		Base64.decode64(@problemtext)
   		Result.new(Base64.decode64(@problemtext),"base64")
@@ -65,21 +71,19 @@ class Problem
   end
 
   def caesar(key)
+    # It may or may not work
   	begin
 
   		# Ripped AGGRESSIVELY from StackOverflow
-
 		  alphabet  = Array('a'..'z')
 		  non_caps  = Hash[alphabet.zip(alphabet.rotate(key))]
-		  
 		  alphabet = Array('A'..'Z')
 		  caps     = Hash[alphabet.zip(alphabet.rotate(key))]
-		  
 		  encrypter = non_caps.merge(caps)
-		  
 		  data = @problemtext.chars.map { |c| encrypter.fetch(c, c) }
 		  caesardata = data.join
 
+      # Return Caesar result
   		Result.new(caesardata,"caesar")
   		newprob = Problem.new(caesardata)
       newprob.md5()
@@ -91,8 +95,11 @@ class Problem
   end
 
   def md5_dict(hash, wordlist)
+    # Each word in the response
     wordlist.each do |word|
+      # Hash the word
       if Digest::MD5.hexdigest(word) == hash.downcase
+        # Return the word if it matches the target hash
         return word
       end
     end
@@ -110,7 +117,9 @@ class Problem
 
   def md5()
   	hash = @problemtext
+    # Uze "Bozo" method (Google, scrape results, hash each result string) to identify SHA answers
     response = HTTParty.get("http://google.com/search?q=#{hash}", headers: {"User-Agent" => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.98 Safari/537.36'})
+    # Google has Sorry in it's CAPTCHA catch request
     if response.include? "sorry"
       puts "WARNING: SUSPECTED GOOGLE FLAGGING BOT TRAFFIC"
     end
@@ -125,21 +134,26 @@ class Problem
 
   def sha1()
     hash = @problemtext
+    # Uze "Bozo" method (Google, scrape results, hash each result string) to identify SHA answers
     response = HTTParty.get("http://google.com/search?q=#{hash}", headers: {"User-Agent" => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.98 Safari/537.36'})
+    # Google has Sorry in it's CAPTCHA catch request
     if response.include? "sorry"
       puts "WARNING: SUSPECTED GOOGLE FLAGGING BOT TRAFFIC"
     end
     wordlist = response.split(/\s+/)
     if plaintext = sha1_dict(hash, wordlist)
       Result.new(plaintext,"sha1")
+      # Return new problem with cracked SHA
       return Problem.new(plaintext)
     else 
+      # Empty problem
       return Problem.new(nil)
     end
   end
 
   def allcaesar()
   	(1..25).each do |i|
+      # Doesn't properly return problems at this time
   		self.caesar(i)
   	end
   end
@@ -183,10 +197,15 @@ rescue
 quiet = false
 end
 
+# SHA1
 problem.sha1()
+# MD5 hashing
 problem.md5()
+# Hex to ASCII
 problem.hex2ascii()
+# B32 and B64 will both be added to results when nested
 problem.b32().b64()
+# Potentially duplicates, TODO fix this
 problem.b64().b32()
 problem.b64().allcaesar()
 
