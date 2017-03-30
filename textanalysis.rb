@@ -111,13 +111,9 @@ class Problem
   def md5()
   	hash = @problemtext
     response = HTTParty.get("http://google.com/search?q=#{hash}", headers: {"User-Agent" => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.98 Safari/537.36'})
-    #http = Net::HTTP.new("google.com", 80)
-    #req = Net::HTTP::Get.new("search?q=#{hash}", {'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.98 Safari/537.36'})
-    #response = http.request(req)
     if response.include? "sorry"
-      puts "WARNING: GOOGLE FLAGGING BOT TRAFFIC"
+      puts "WARNING: SUSPECTED GOOGLE FLAGGING BOT TRAFFIC"
     end
-    #puts response
     wordlist = response.split(/\s+/)
     if plaintext = md5_dict(hash, wordlist)
     	Result.new(plaintext,"md5")
@@ -129,11 +125,10 @@ class Problem
 
   def sha1()
     hash = @problemtext
-    response = Net::HTTP.get URI("")
+    response = HTTParty.get("http://google.com/search?q=#{hash}", headers: {"User-Agent" => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.98 Safari/537.36'})
     if response.include? "sorry"
-      puts "WARNING: GOOGLE FLAGGING BOT TRAFFIC"
+      puts "WARNING: SUSPECTED GOOGLE FLAGGING BOT TRAFFIC"
     end
-    #, {'User-Agent' => 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/57.0.2987.98 Safari/537.36'}
     wordlist = response.split(/\s+/)
     if plaintext = sha1_dict(hash, wordlist)
       Result.new(plaintext,"sha1")
@@ -188,7 +183,7 @@ rescue
 quiet = false
 end
 
-#problem.sha1()
+problem.sha1()
 problem.md5()
 problem.hex2ascii()
 problem.b32().b64()
